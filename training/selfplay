@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -eu
+cd "$(dirname "$0")/.."
+exec .runtime/katago selfplay -config .runtime/KataGo/cpp/configs/training/selfplay8mainb18.cfg -config training/selfplay.cfg -override-config "homeDataDir=$PWD/.runtime" -models-dir .runtime/teachers -output-dir .runtime/selfplay -max-games-total "${1:-32}"

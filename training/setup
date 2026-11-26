@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+./setup
+if [[ ! -d .runtime/KataGo ]]; then
+    git clone --depth 1 --branch v1.18.1 https://github.com/lightvector/KataGo .runtime/KataGo
+fi
+[[ $(git -C .runtime/KataGo rev-parse HEAD) == 92ee95c0a4b25fec214da00951ab69e97e207729 ]]
+cd .runtime
+if [[ ! -f teacher.ckpt ]]; then
+    curl -fL --retry 3 https://media.katagotraining.org/uploaded/networks/models_extra/kata9x9-b18c384nbt-20231025.ckpt -o teacher.ckpt.part
+    mv teacher.ckpt.part teacher.ckpt
+fi
+echo '95bc4d9c60981c381bc78d09600cdf1cb680ea933c094fa44ecec9b7a3239813  teacher.ckpt' | sha256sum -c
+mkdir -p teachers/baseline
+ln -sfn ../../model.bin.gz teachers/baseline/model.bin.gz
+[[ -x venv/bin/python ]] || uv venv --python 3.12 venv
+uv pip install --python venv/bin/python numpy packaging psutil scipy
+uv pip install --python venv/bin/python torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124

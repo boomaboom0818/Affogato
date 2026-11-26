@@ -53,3 +53,27 @@ The specialist b18 network was fine-tuned on 9×9 positions including variations
 The main training run also publishes newer transformer networks. Its published ratings do not establish their ordering on this GPU under a particular 9×9 clock. A tournament comparison should use the event's time control and rules and replay each opening with colors reversed. [Training networks](https://katagotraining.org/networks/) · [KataGo engine and backend notes](https://github.com/lightvector/KataGo)
 
 On the local GTX 1660 Ti, the five-position benchmark recommended 16 threads for the five-second profile and measured approximately 600 search visits per second. A second measurement at 16 threads returned 593 visits per second. A separate accelerated GTP self-play check completed 73 moves, two passes and final scoring (White +4.5). These runs verify operation and throughput. Tournament win rate still requires head-to-head games under the event rules.
+
+## Affogato's trained network
+
+`affogato-001` is the first locally trained candidate. It starts from the specialist checkpoint's averaged weights and fine-tunes its policy head to predict search visit distributions in 9×9 self-play. The value head and shared layers are frozen. The first run used 12 games and 307 weighted positions. Additional strength needs to be demonstrated in independent matches.
+
+To play this exact candidate on a fresh checkout, run the following after `./setup`. Python 3 reconstructs the trained weights from the original network and the included policy update, verifying both model digests.
+
+```sh
+python3 models/restore.py
+AFFOGATO_MODEL="$PWD/.runtime/affogato-001.bin.gz" ./affogato
+```
+
+To produce a new candidate on an NVIDIA GPU, install uv, then run:
+
+```sh
+training/setup
+training/selfplay 128
+.runtime/venv/bin/python training/fit.py .runtime/affogato-002
+python3 training/arena.py .runtime/affogato-002/model.bin.gz --pairs 12 > .runtime/matches-002.jsonl
+```
+
+Each self-play invocation adds fresh examples under .runtime/selfplay. The trainer takes one shuffled pass over all saved teacher data with random board symmetries. It starts from the pinned specialist checkpoint each time. The output directory must be new.
+
+The arena uses the original specialist as opponent, Chinese scoring, 7.5 komi, and a five-second deadline. It plays each opening twice with reversed colors, records all moves and elapsed times, and scores clock overruns as losses. Use `--komi` to set the event value or `--game-seconds 1800` for an absolute clock. Keep a separate set of unseen openings for any final strength claim after tuning on these development matches.
