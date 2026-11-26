@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Bound the entire job with systemd RuntimeMaxSec (see README).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+run=$1
+mkdir "$run"
+exec >>"$run/run.log" 2>&1
+git rev-parse HEAD > "$run/revision"
+date -Is
+echo 'Generating 9x9 search targets for five hours'
+rc=0
+timeout --signal=INT --kill-after=90s 5h training/selfplay 100000 1536 > "$run/selfplay.log" 2>&1 || rc=$?
+if [[ $rc != 0 && $rc != 124 ]]; then exit "$rc"; fi
+grep -q 'All cleaned up, quitting' "$run/selfplay.log"
+date -Is
+echo 'Fitting a frozen candidate'
+.runtime/venv/bin/python training/fit.py "$run/affogato-002" > "$run/fit.log" 2>&1
+date -Is
+echo 'Sampling 64 evaluation openings'
+python3 training/openings.py --count 64 > "$run/openings.json" 2> "$run/openings.log"
+date -Is
+echo 'Playing 128 games with five seconds per move'
+python3 training/arena.py "$run/affogato-002/model.bin.gz" --openings "$run/openings.json" --pairs 64 > "$run/games.jsonl" 2> "$run/arena.log"
+python3 training/report.py "$run/games.jsonl" --expected-pairs 64 | tee "$run/result.json"
+date -Is
