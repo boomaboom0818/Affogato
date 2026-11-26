@@ -77,3 +77,12 @@ python3 training/arena.py .runtime/affogato-002/model.bin.gz --pairs 12 > .runti
 Each self-play invocation adds fresh examples under .runtime/selfplay. The trainer takes one shuffled pass over all saved teacher data with random board symmetries. It starts from the pinned specialist checkpoint each time. The output directory must be new.
 
 The arena uses the original specialist as opponent, Chinese scoring, 7.5 komi, and a five-second deadline. It plays each opening twice with reversed colors, records all moves and elapsed times, and scores clock overruns as losses. Use `--komi` to set the event value or `--game-seconds 1800` for an absolute clock. Keep a separate set of unseen openings for any final strength claim after tuning on these development matches.
+
+For a larger experiment, the following systemd user service caps total wall time at 24 hours and keeps logs under the new run directory. Finish other GPU matches first. The system must stay awake.
+
+```sh
+systemd-run --user --unit=affogato-experiment --property=RuntimeMaxSec=24h \
+  --working-directory="$PWD" "$PWD/training/run-experiment" .runtime/experiment-002
+```
+
+The run collects five hours of teacher games with up to 1,536 visits per search, then fits one candidate and freezes it before generating evaluation openings. It evaluates 64 distinct openings including the empty board, with colors reversed and five seconds per move. Read run.log for the stage and games.jsonl for finished games. The report counts wins, losses and draws. Its predeclared gate requires all 64 pairs, more candidate wins than losses and a one-sided exact sign test below 0.05 across non-tied pairs. It estimates performance on the sampled opening distribution. The 30-minute clock requires a separate evaluation.

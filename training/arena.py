@@ -29,7 +29,7 @@ def command(bot, request):
 
 
 @contextlib.contextmanager
-def engine(model, args):
+def engine(model, args, extra=()):
     cmd = [str(ROOT / "affogato")]
     if args.game_seconds:
         cmd.append("--game-clock")
@@ -37,6 +37,7 @@ def engine(model, args):
         # Reserve at most a quarter second for returning the move.
         cap = args.move_seconds - min(0.25, args.move_seconds / 10)
         cmd += ["-override-config", f"maxTime={cap}"]
+    cmd.extend(extra)
     bot = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                            text=True, env={**os.environ, "AFFOGATO_MODEL": str(model)})
     try:
@@ -48,7 +49,7 @@ def engine(model, args):
         bot.wait()
 
 
-def game(bots, opening, args):
+def game(bots, opening, args, referee):
     remaining = dict.fromkeys("BW", args.game_seconds)
     moves = []
     for bot in bots.values():
@@ -78,14 +79,15 @@ def game(bots, opening, args):
             return other + "+Resign", moves
         command(bots[other], f"play {color} {move}")
         if len(moves) >= 2 and all(m[1].lower() == "pass" for m in moves[-2:]):
-            return command(bots["B"], "final_score"), moves
+            return command(referee, "final_score"), moves
     raise RuntimeError("Exceeded 400 moves")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidate", type=Path)
-    parser.add_argument("--pairs", type=int, default=1, choices=range(1, len(OPENINGS) + 1))
+    parser.add_argument("--pairs", type=int, default=1)
+    parser.add_argument("--openings", type=Path, help="JSON list of opening move sequences")
     parser.add_argument("--komi", type=float, default=7.5)
     clock = parser.add_mutually_exclusive_group()
     clock.add_argument("--move-seconds", type=float, default=5)
@@ -93,12 +95,15 @@ def main():
     args = parser.parse_args()
     if args.move_seconds <= 0 or (args.game_seconds is not None and args.game_seconds <= 0):
         parser.error("Time budget must be positive")
-    for opening in OPENINGS[:args.pairs]:
+    openings = json.loads(args.openings.read_text()) if args.openings else OPENINGS
+    if not 1 <= args.pairs <= len(openings):
+        parser.error("--pairs must be within the opening set")
+    for opening in openings[:args.pairs]:
         for color in "BW":
             # Fresh processes prevent evaluation caches carrying over between paired games.
             with engine(args.candidate.resolve(), args) as challenger, engine(ROOT / ".runtime/model.bin.gz", args) as baseline:
                 bots = {"B": challenger, "W": baseline} if color == "B" else {"B": baseline, "W": challenger}
-                result, moves = game(bots, opening, args)
+                result, moves = game(bots, opening, args, baseline)
                 print(json.dumps(dict(candidate=str(args.candidate), candidate_color=color, result=result,
                                       opening=opening, moves=moves, komi=args.komi, game_seconds=args.game_seconds,
                                       move_seconds=None if args.game_seconds else args.move_seconds)), flush=True)
