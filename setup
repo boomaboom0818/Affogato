@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+mkdir -p .runtime
+cd .runtime
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+fetch() {
+    local url=$1 file=$2 hash=$3
+    if [[ -f "$file" ]] && echo "$hash  $file" | sha256sum --check --status; then
+        return
+    fi
+    curl --fail --location --retry 3 "$url" -o "$tmp/$file"
+    echo "$hash  $tmp/$file" | sha256sum --check
+    mv "$tmp/$file" "$file"
+}
+
+fetch https://github.com/lightvector/KataGo/releases/download/v1.18.1/katago-v1.18.1-opencl-linux-x64.zip engine.zip 81ecea81526adb412a392ec728dbdf9627e754df7cf1a7a3dbb8ef220182184a
+fetch https://media.katagotraining.org/uploaded/networks/models_extra/kata9x9-b18c384nbt-20231025.bin.gz model.bin.gz a1298ce1adc1dad7bd868ca962b2384cc8388ed373a00e6bae1114fa6f9e2d61
+unzip -oq engine.zip katago README.txt -d "$tmp"
+mv "$tmp/katago" "$tmp/README.txt" .
+mkdir -p opencltuning
+cp ../tuning/*.txt opencltuning/
+./katago version

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(cd "$(dirname "$0")" && pwd)
+engine="$root/.runtime/katago"
+model="${AFFOGATO_MODEL:-$root/.runtime/model.bin.gz}"
+if [[ ! -x "$engine" || ! -r "$model" ]]; then
+    echo "Missing KataGo or network. Run $root/setup or check AFFOGATO_MODEL." >&2
+    exit 1
+fi
+clock_args=(-override-config maxTime=4.75)
+if [[ ${1:-} == --game-clock ]]; then
+    shift
+    clock_args=()
+fi
+exec "$engine" gtp -config "$root/affogato.cfg" -model "$model" -override-config "homeDataDir=$root/.runtime" "${clock_args[@]}" "$@"
