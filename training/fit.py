@@ -55,13 +55,17 @@ def fit(args):
             rows += len(ids)
     if rows == 0:
         raise ValueError("No weighted policy targets")
+    export(model, output)
+    print(f"Trained on {rows} weighted positions. Candidate: {output / 'model.bin.gz'}")
+
+
+def export(model, output):
     checkpoint = output / "model.ckpt"
     torch.save({"model": model.cpu().state_dict(), "config": model.config}, checkpoint)
     subprocess.run([sys.executable, str(UPSTREAM / "export_model_pytorch.py"),
                     "-checkpoint", str(checkpoint), "-export-dir", str(output),
                     "-filename-prefix", "model", "-model-name", output.name], check=True)
     subprocess.run(["gzip", "-n", str(output / "model.bin")], check=True)
-    print(f"Trained on {rows} weighted positions. Candidate: {output / 'model.bin.gz'}")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""Reconstruct the locally trained candidate from the pinned baseline and policy update."""
+"""Reconstruct the locally trained candidate from the pinned baseline and weight update."""
 import argparse
 import gzip
 import hashlib
@@ -18,7 +18,7 @@ baseline = gzip.decompress((runtime / "model.bin.gz").read_bytes())
 if hashlib.sha256(baseline).hexdigest() != manifest["base_sha256"]:
     raise SystemExit("Baseline digest mismatch. Run ./setup to install the pinned network.")
 body = bytearray(baseline.split(b"\n", 1)[1])
-patch = (candidate / "policy.bin").read_bytes()
+patch = (candidate / manifest.get("update", "policy.bin")).read_bytes()
 offset = manifest["offset"]
 body[offset:offset + len(patch)] = patch
 model = manifest["name"].encode() + b"\n" + body

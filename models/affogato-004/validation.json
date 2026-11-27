@@ -1,0 +1,7 @@
+{
+  "train_games": 583,
+  "held_games": 127,
+  "held_rows": 3267,
+  "baseline_logloss": 0.25906142592430115,
+  "candidate_logloss": 0.25435715913772583
+}
