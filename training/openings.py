@@ -2,6 +2,7 @@
 import argparse
 import json
 import random
+from pathlib import Path
 
 from arena import ROOT, command, engine
 
@@ -18,17 +19,22 @@ def symmetry_key(moves):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--count", type=int, required=True)
+    parser.add_argument("--exclude", type=Path, help="Avoid opening sequences from a previous arena, including symmetries")
+    parser.add_argument("--seed", type=int, default=514932)
     args = parser.parse_args()
     args.komi, args.game_seconds, args.move_seconds, args.visits = 7.5, None, 0.35, None
-    rng = random.Random(514932)
-    book = [[]]
-    seen = {()}
+    rng = random.Random(args.seed)
+    excluded = json.loads(args.exclude.read_text()) if args.exclude else []
+    seen = {symmetry_key(moves) for moves in excluded}
+    book = [] if () in seen else [[]]
+    first_index = len(book)
+    seen.add(())
     with engine(ROOT / ".runtime/model.bin.gz", args, [
         "-override-config", "chosenMoveTemperatureEarly=1,chosenMoveTemperature=1"
     ]) as bot:
         while len(book) < args.count:
             # Balance six distinct first-move orbits before sampling continuations.
-            first = ("E5", "D5", "D4", "C5", "C4", "C3")[(len(book) - 1) % 6]
+            first = ("E5", "D5", "D4", "C5", "C4", "C3")[(len(book) - first_index) % 6]
             command(bot, "clear_board")
             command(bot, f"play B {first}")
             moves = [first] + [command(bot, "genmove " + "BW"[i % 2]) for i in range(1, rng.randint(3, 9))]
