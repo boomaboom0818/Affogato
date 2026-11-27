@@ -31,7 +31,9 @@ def command(bot, request):
 @contextlib.contextmanager
 def engine(model, args, extra=()):
     cmd = [str(ROOT / "affogato")]
-    if args.game_seconds:
+    if args.visits:
+        cmd += ["--game-clock", "-override-config", f"maxVisits={args.visits}"]
+    elif args.game_seconds:
         cmd.append("--game-clock")
     else:
         # Reserve at most a quarter second for returning the move.
@@ -69,7 +71,7 @@ def game(bots, opening, args, referee):
             move = command(bots[color], f"genmove {color}")
             elapsed = time.monotonic() - start
             budget = remaining[color] if args.game_seconds else args.move_seconds
-            if elapsed > budget:
+            if not args.visits and elapsed > budget:
                 moves.append((color, move, elapsed))
                 return other + "+Time", moves
             if args.game_seconds:
@@ -92,7 +94,10 @@ def main():
     clock = parser.add_mutually_exclusive_group()
     clock.add_argument("--move-seconds", type=float, default=5)
     clock.add_argument("--game-seconds", type=int)
+    clock.add_argument("--visits", type=int, help="Maximum search visits per move with no clock forfeits")
     args = parser.parse_args()
+    if args.visits is not None and args.visits <= 0:
+        parser.error("Visit budget must be positive")
     if args.move_seconds <= 0 or (args.game_seconds is not None and args.game_seconds <= 0):
         parser.error("Time budget must be positive")
     openings = json.loads(args.openings.read_text()) if args.openings else OPENINGS
@@ -106,7 +111,7 @@ def main():
                 result, moves = game(bots, opening, args, baseline)
                 print(json.dumps(dict(candidate=str(args.candidate), candidate_color=color, result=result,
                                       opening=opening, moves=moves, komi=args.komi, game_seconds=args.game_seconds,
-                                      move_seconds=None if args.game_seconds else args.move_seconds)), flush=True)
+                                      visits=args.visits, move_seconds=None if args.game_seconds or args.visits else args.move_seconds)), flush=True)
 
 
 if __name__ == "__main__":

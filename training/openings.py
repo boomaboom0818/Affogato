@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--count", type=int, required=True)
     args = parser.parse_args()
-    args.komi, args.game_seconds, args.move_seconds = 7.5, None, 0.35
+    args.komi, args.game_seconds, args.move_seconds, args.visits = 7.5, None, 0.35, None
     rng = random.Random(514932)
     book = [[]]
     seen = {()}
