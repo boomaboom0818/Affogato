@@ -27,8 +27,11 @@ if __name__ == "__main__":
         "-override-config", "chosenMoveTemperatureEarly=1,chosenMoveTemperature=1"
     ]) as bot:
         while len(book) < args.count:
+            # Balance six distinct first-move orbits before sampling continuations.
+            first = ("E5", "D5", "D4", "C5", "C4", "C3")[(len(book) - 1) % 6]
             command(bot, "clear_board")
-            moves = [command(bot, "genmove " + "BW"[i % 2]) for i in range(rng.randint(3, 9))]
+            command(bot, f"play B {first}")
+            moves = [first] + [command(bot, "genmove " + "BW"[i % 2]) for i in range(1, rng.randint(3, 9))]
             if any(m.lower() in ("pass", "resign") for m in moves):
                 continue
             key = symmetry_key(moves)

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 cd "$(dirname "$0")/.."
-exec .runtime/katago selfplay -config .runtime/KataGo/cpp/configs/training/selfplay8mainb18.cfg -config training/selfplay.cfg -override-config "homeDataDir=$PWD/.runtime,maxVisits=${2:-128}" -models-dir .runtime/teachers -output-dir .runtime/selfplay -max-games-total "${1:-32}"
+extra=()
+if [[ -n ${3:-} ]]; then extra=(-config "$3"); fi
+exec .runtime/katago selfplay -config .runtime/KataGo/cpp/configs/training/selfplay8mainb18.cfg -config training/selfplay.cfg "${extra[@]}" -override-config "homeDataDir=$PWD/.runtime,maxVisits=${2:-128}" -models-dir .runtime/teachers -output-dir .runtime/selfplay -max-games-total "${1:-32}"

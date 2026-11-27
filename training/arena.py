@@ -88,9 +88,11 @@ def game(bots, opening, args, referee):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("candidate", type=Path)
+    parser.add_argument("--opponent", type=Path, default=ROOT / ".runtime/model.bin.gz")
     parser.add_argument("--pairs", type=int, default=1)
     parser.add_argument("--openings", type=Path, help="JSON list of opening move sequences")
     parser.add_argument("--komi", type=float, default=7.5)
+    parser.add_argument("--skip-games", type=int, default=0, help="Skip this many already recorded games in opening/color order")
     clock = parser.add_mutually_exclusive_group()
     clock.add_argument("--move-seconds", type=float, default=5)
     clock.add_argument("--game-seconds", type=int)
@@ -103,13 +105,17 @@ def main():
     openings = json.loads(args.openings.read_text()) if args.openings else OPENINGS
     if not 1 <= args.pairs <= len(openings):
         parser.error("--pairs must be within the opening set")
-    for opening in openings[:args.pairs]:
+    if not 0 <= args.skip_games <= 2 * args.pairs:
+        parser.error("Invalid number of games to skip")
+    for index, opening in enumerate(openings[:args.pairs]):
         for color in "BW":
+            if 2 * index + (color == "W") < args.skip_games:
+                continue
             # Fresh processes prevent evaluation caches carrying over between paired games.
-            with engine(args.candidate.resolve(), args) as challenger, engine(ROOT / ".runtime/model.bin.gz", args) as baseline:
+            with engine(args.candidate.resolve(), args) as challenger, engine(args.opponent.resolve(), args) as baseline:
                 bots = {"B": challenger, "W": baseline} if color == "B" else {"B": baseline, "W": challenger}
                 result, moves = game(bots, opening, args, baseline)
-                print(json.dumps(dict(candidate=str(args.candidate), candidate_color=color, result=result,
+                print(json.dumps(dict(candidate=str(args.candidate), opponent=str(args.opponent), candidate_color=color, result=result,
                                       opening=opening, moves=moves, komi=args.komi, game_seconds=args.game_seconds,
                                       visits=args.visits, move_seconds=None if args.game_seconds or args.visits else args.move_seconds)), flush=True)
 
