@@ -1,0 +1,18 @@
+{
+  "complete": true,
+  "completed_pairs": 13,
+  "wins": 12,
+  "losses": 14,
+  "draws": 0,
+  "winning_pairs": 0,
+  "tied_pairs": 12,
+  "losing_pairs": 1,
+  "one_sided_sign_test": 1.0,
+  "passes_gate": false,
+  "candidate": "affogato-003",
+  "opponent": "affogato-002",
+  "recorded_games": 26,
+  "all_game_wins": 12,
+  "all_game_losses": 14,
+  "time_forfeits": 0
+}

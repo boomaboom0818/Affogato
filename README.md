@@ -100,3 +100,11 @@ Run `training/selfplay 32 2048 training/targeted.cfg` to add fresh teacher conti
 ### Fitting the game-outcome estimate
 
 Run `.runtime/venv/bin/python training/fit_value.py .runtime/experiment-004/affogato-004` after collecting self-play data. This starts from the specialist and updates only its final win/loss/no-result layer. It keeps roughly one fifth of games out of the fit using KataGo's game hash. The validation.json file records weighted log loss for both networks on the same held-out outcomes. Lower loss means more accurate outcome probabilities on that dataset. Playing strength requires a direct match.
+
+### Completed November 2026 matches
+
+With Chinese scoring, 7.5 komi and 1,024 visits per move, Affogato-002 scored 62–66 against the original specialist. Across 64 color-reversed openings it swept three, split 56 and lost both games on five. It missed the predeclared promotion threshold. The separate five-second arena stopped after 71 games at 34–37, including 52 forfeits on time. Its first 35 complete pairs account for 70 games.
+
+Affogato-003 trained on 18,612 weighted positions after 32 additional teacher games. In its exploratory test against 002, it scored 12–14 across 13 pairs, splitting 12 and losing one. Neither trial established a strength gain. Restore the frozen candidate with `python3 models/restore.py affogato-003`.
+
+The archives include the opening sets, move-by-move arena records, score summaries and compressed teacher game records. In the clocked summary, wins and losses count complete pairs and the all_game fields include the final unpaired game. [Experiment 002](results/experiment-002/) · [Experiment 003](results/experiment-003/)
