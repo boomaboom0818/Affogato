@@ -86,3 +86,5 @@ systemd-run --user --unit=affogato-experiment --property=RuntimeMaxSec=24h \
 ```
 
 The run collects five hours of teacher games with up to 1,536 visits per search, then fits one candidate and freezes it before generating evaluation openings. It evaluates 64 distinct openings including the empty board, with colors reversed and five seconds per move. Read run.log for the stage and games.jsonl for finished games. The report counts wins, losses and draws. Its predeclared gate requires all 64 pairs, more candidate wins than losses and a one-sided exact sign test below 0.05 across non-tied pairs. It estimates performance on the sampled opening distribution. The 30-minute clock requires a separate evaluation.
+
+The second candidate, `affogato-002`, completed fitting on 18,051 weighted positions. Run `python3 models/restore.py affogato-002` to reconstruct the frozen network and set `AFFOGATO_MODEL="$PWD/.runtime/affogato-002.bin.gz"` when launching it. Its competition-strength evaluation uses the five-second clock.
