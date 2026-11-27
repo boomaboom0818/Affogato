@@ -1,0 +1,18 @@
+{
+  "complete": false,
+  "completed_pairs": 35,
+  "wins": 34,
+  "losses": 36,
+  "draws": 0,
+  "winning_pairs": 5,
+  "tied_pairs": 24,
+  "losing_pairs": 6,
+  "one_sided_sign_test": 0.7255859375,
+  "passes_gate": false,
+  "candidate": "affogato-002",
+  "opponent": "kata9x9-b18c384nbt-s6603587840-d252232394",
+  "recorded_games": 71,
+  "all_game_wins": 34,
+  "all_game_losses": 37,
+  "time_forfeits": 52
+}
