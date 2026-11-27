@@ -90,3 +90,9 @@ The run collects five hours of teacher games with up to 1,536 visits per search,
 The second candidate, `affogato-002`, completed fitting on 18,051 weighted positions. Run `python3 models/restore.py affogato-002` to reconstruct the frozen network and set `AFFOGATO_MODEL="$PWD/.runtime/affogato-002.bin.gz"` when launching it. Its competition-strength evaluation uses the five-second clock.
 
 For a playing-strength comparison, use `training/arena.py` with `--visits 1024`. Both models get the same maximum search visits per move. Elapsed times are recorded and the board result determines the winner. Keep this score separate from clocked matches.
+
+### Revisiting losses from both colors
+
+Four openings in the first 56 completed equal-visit pairs produced losses for Affogato-002 from both colors. The SGFs in `training/positions` end immediately before the two games first diverged. In pair 17, White played A5 on move 26. Reanalysis by the baseline at 3,072 visits estimated Black ahead by 2.76 points after A5 and White ahead by 2.91 after the B1 continuation played in the reverse-color game. The baseline's unrestricted search preferred H3. These are estimates from independent searches.
+
+Run `training/selfplay 32 2048 training/targeted.cfg` to add fresh teacher continuations. The profile requests SGF starting positions in 80% of start selections and favors later positions in those prefixes. Then run the usual fit on the cumulative dataset. For a direct comparison, pass the previous network to `training/arena.py --opponent`. The opening sampler now rotates six distinct first-move families and includes one empty board. Use fresh positions for measuring generalization.
