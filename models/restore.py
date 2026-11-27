@@ -1,4 +1,5 @@
 """Reconstruct the locally trained candidate from the pinned baseline and policy update."""
+import argparse
 import gzip
 import hashlib
 import json
@@ -8,7 +9,10 @@ from pathlib import Path
 
 models = Path(__file__).resolve().parent
 runtime = models.parent / ".runtime"
-candidate = models / "affogato-001"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("name", nargs="?", default="affogato-001",
+                    choices=sorted(p.parent.name for p in models.glob("*/manifest.json")))
+candidate = models / parser.parse_args().name
 manifest = json.loads((candidate / "manifest.json").read_text())
 baseline = gzip.decompress((runtime / "model.bin.gz").read_bytes())
 if hashlib.sha256(baseline).hexdigest() != manifest["base_sha256"]:
