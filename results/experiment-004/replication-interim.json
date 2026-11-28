@@ -1,0 +1,13 @@
+{
+  "recorded_games": 48,
+  "complete": false,
+  "completed_pairs": 24,
+  "wins": 22,
+  "losses": 26,
+  "draws": 0,
+  "winning_pairs": 0,
+  "tied_pairs": 22,
+  "losing_pairs": 2,
+  "one_sided_sign_test": 1.0,
+  "passes_gate": false
+}

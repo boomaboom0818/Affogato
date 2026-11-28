@@ -15,7 +15,7 @@ from katago.train.load_model import load_model
 
 
 def fit(args):
-    files = sorted((ROOT / ".runtime/selfplay/baseline/tdata").glob("*.npz"))
+    files = sorted(args.data_dir.glob("*.npz"))
     if not files:
         raise SystemExit("Generate teacher self-play data first.")
     output = args.output.resolve()
@@ -72,4 +72,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path, help="New directory for this candidate")
     parser.add_argument("--seed", type=int, default=1907)
+    parser.add_argument("--data-dir", type=Path, default=ROOT / ".runtime/selfplay/baseline/tdata")
     fit(parser.parse_args())

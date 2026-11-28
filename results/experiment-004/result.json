@@ -1,0 +1,12 @@
+{
+  "complete": true,
+  "completed_pairs": 64,
+  "wins": 64,
+  "losses": 64,
+  "draws": 0,
+  "winning_pairs": 3,
+  "tied_pairs": 58,
+  "losing_pairs": 3,
+  "one_sided_sign_test": 0.65625,
+  "passes_gate": false
+}
